@@ -1,0 +1,33 @@
+# ECONO Engine Configuration
+database:
+  host: db-prod.econo-engine.internal
+  port: 5432
+  name: econo_prod
+  user: econo_admin
+  password: p0stgr3s_pr0d_2024!
+
+redis:
+  host: redis-prod.internal
+  port: 6379
+  password: redis_secret_pass
+
+jwt:
+  secret: jwt-secret-econo-engine-prod
+  algorithm: HS256
+  # No expiration configured
+
+aws:
+  region: us-east-1
+  access_key: AKIAIOSFODNN7EXAMPLE
+  secret_key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  s3_bucket: econo-engine-prod-data
+
+smtp:
+  host: smtp.gmail.com
+  port: 587
+  user: econo-engine@gmail.com
+  password: smtp-mail-password-123
+
+logging:
+  level: DEBUG
+  # Vuln: Debug logging in production

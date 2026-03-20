@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Vuln: Secrets in docker-compose
+      - DATABASE_URL=sqlite:///./app.db
+      - SECRET_KEY=super-secret-key-do-not-share-2024
+      - JWT_SECRET=jwt-secret-econo-engine-prod
+      - AWS_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
+      - AWS_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      - REDIS_URL=redis://:redis_secret_pass@redis:6379/0
+      - DEBUG=true
+    volumes:
+      - .:/app
+    # Vuln: privileged mode
+    privileged: true
+    # Vuln: No resource limits
+    # Vuln: No health check
+    networks:
+      - econo-net
+
+  redis:
+    image: redis:latest
+    ports:
+      # Vuln: Redis exposed to host without auth
+      - "6379:6379"
+    # Vuln: No password configured
+    networks:
+      - econo-net
+
+networks:
+  econo-net:
+    driver: bridge
