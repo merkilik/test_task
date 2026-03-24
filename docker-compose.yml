@@ -1,37 +1,77 @@
-version: "3.8"
+version: "3.9"
 
 services:
-  api:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      # Vuln: Secrets in docker-compose
-      - DATABASE_URL=sqlite:///./app.db
-      - SECRET_KEY=super-secret-key-do-not-share-2024
-      - JWT_SECRET=jwt-secret-econo-engine-prod
-      - AWS_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
-      - AWS_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-      - REDIS_URL=redis://:redis_secret_pass@redis:6379/0
-      - DEBUG=true
-    volumes:
-      - .:/app
-    # Vuln: privileged mode
-    privileged: true
-    # Vuln: No resource limits
-    # Vuln: No health check
-    networks:
-      - econo-net
-
   redis:
-    image: redis:latest
-    ports:
-      # Vuln: Redis exposed to host without auth
-      - "6379:6379"
-    # Vuln: No password configured
+    image: redis:7.4-alpine
+    expose:
+      - "6379"
+    volumes:
+      - redis:/data
     networks:
-      - econo-net
+      - net-ec
+    container_name: redis-ec
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASS}"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASS}", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - api_data:/app/uploads:ro
+    networks:
+      - net-ec
+    read_only: true
+    image: nginx:1.27-alpine
+    container_name: nginx-ec
+    restart: unless-stopped
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+  api:
+    environment:
+      APP_ENV: production
+      DEBUG: "false"
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - redis
+    read_only: true
+    build:
+      context: .
+    container_name: api-ec
+    restart: unless-stopped
+    env_file:
+      - .env
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - api_data:/app/uploads
+    networks:
+      - net-ec
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+
 
 networks:
-  econo-net:
+  net-ec:
     driver: bridge
+
+volumes:
+  redis:
+  api_data:

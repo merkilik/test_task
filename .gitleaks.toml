@@ -1,0 +1,10 @@
+title = "gitleaks-ec"
+
+[allowlist]
+description = "Global allow list"
+paths = [
+  '''(^|/)\.git/''',
+  '''(^|/)venv/''',
+  '''(^|/)\.venv/''',
+  '''(^|/)node_modules/'''
+]

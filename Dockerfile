@@ -1,17 +1,25 @@
-# Vuln: Using generic 'latest' tag - not pinned
-FROM python:3.9
+FROM python:3.11-slim-bookworm
 
-# Vuln: Running as root (no USER directive)
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
 WORKDIR /app
 
-# Vuln: Copying everything including .env and secrets
-COPY . .
+RUN groupadd --system appgroup && useradd --system --gid appgroup --create-home appuser
 
-# Vuln: No --no-cache-dir, no layer optimization
+COPY requirements.txt .
+
 RUN pip install -r requirements.txt
 
-# Vuln: Exposing all ports
+COPY config.yaml ./config.yaml
+COPY app ./app
+COPY nginx ./nginx
+
+RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app
+
+USER appuser
+
 EXPOSE 8000
 
-# Vuln: Debug mode in production, binding to 0.0.0.0
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
