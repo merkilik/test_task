@@ -48,3 +48,24 @@ Default credentials:
 ## Deployment
 
 Deploy to production VPS using Docker Compose.
+
+
+
+## ⚙️ CI/CD
+
+Pipeline в GitHub Actions делает:
+
+1. Semgrep — ищет уязвимости в коде
+2. Gitleaks — ищет секреты
+3. Trivy fs — проверяет зависимости
+4. Сборка Docker образа
+5. Trivy image — проверяет образ
+
+👉 билд падает, если есть HIGH / CRITICAL
+
+
+---
+
+## 🧠 Итог
+
+Pipeline автоматически ловит уязвимости и не даёт им попасть в прод.
