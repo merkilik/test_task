@@ -10,7 +10,7 @@ RUN groupadd --system appgroup && useradd --system --gid appgroup --create-home 
 
 COPY requirements.txt .
 
-RUN pip install -r requirements.txt
+RUN pip upgrade -r requirements.txt
 
 COPY config.yaml ./config.yaml
 COPY app ./app
